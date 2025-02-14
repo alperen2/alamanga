@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Manga {
+  id          String        @id @default(cuid())
+  title       String
+  cover       String
+  description String
+  status      MangaStatus   @default(ONGOING)
+  author      String
+  artist      String?
+  rating      Float         @default(0)
+  views       Int           @default(0)
+  genres      Genre[]       @relation("MangaToGenre")
+  chapters    Chapter[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Chapter {
+  id        String   @id @default(cuid())
+  number    Float
+  title     String?
+  manga     Manga    @relation(fields: [mangaId], references: [id])
+  mangaId   String
+  pages     Page[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([mangaId, number])
+}
+
+model Page {
+  id        String   @id @default(cuid())
+  number    Int
+  imageUrl  String
+  chapter   Chapter  @relation(fields: [chapterId], references: [id])
+  chapterId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([chapterId, number])
+}
+
+model Genre {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  icon        String?
+  mangas      Manga[]  @relation("MangaToGenre")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum MangaStatus {
+  ONGOING
+  FINISHED
+  DROPPED
+} 
